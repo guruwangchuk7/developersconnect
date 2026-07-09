@@ -85,10 +85,10 @@ export default function EventDetailClient({ id, initialEvent }: { id: string, in
           {/* Back Button */}
           <div className="absolute top-6 left-6">
             <button
-              onClick={() => router.push('/events')}
+              onClick={() => router.push('/dashboard?tab=events')}
               className="flex items-center gap-2 px-4 py-2 bg-background/80 backdrop-blur-md border border-border/40 rounded-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> All Events
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
             </button>
           </div>
         </section>

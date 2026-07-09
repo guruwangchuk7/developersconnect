@@ -24,7 +24,9 @@ export default async function EventsPage() {
     description: e.description,
     location: e.venue,
     date: new Date(e.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-    type: "COMMUNITY",
+    rawDate: e.event_date,
+    organizerName: e.profiles?.full_name || 'Anonymous',
+    type: "Community Event",
     attendees: 0,
     prize: null,
     featured: false,
@@ -33,3 +35,4 @@ export default async function EventsPage() {
 
   return <EventsClient initialEvents={processedEvents} />;
 }
+// Hot-reload trigger page.tsx

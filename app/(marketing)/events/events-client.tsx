@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { createClient } from "@/lib/supabase"
-import { GlobalHeader } from "@/components/common/global-header";
-import { GlobalFooter } from "@/components/common/global-footer";
-import { Calendar, MapPin, Search, Users, Trophy } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { GlobalHeader } from "@/components/common/global-header"
+import { GlobalFooter } from "@/components/common/global-footer"
+import { Calendar, MapPin, Search, Users, Trophy } from "lucide-react"
+import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 export function EventsClient({ initialEvents }: { initialEvents: any[] }) {
   const supabase = createClient()
@@ -59,11 +59,16 @@ export function EventsClient({ initialEvents }: { initialEvents: any[] }) {
                   ))}
                </div>
             ) : filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20 md:mb-32">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20 md:mb-32">
                 {filteredEvents.map((event) => {
-                   const endDateMatch = event.description?.match(/END_DATE: (.*)/)
+                   const endDateMatch = event.description?.match(/EVENT_END_DATE: (.*)/)
                    const endDate = endDateMatch ? endDateMatch[1] : null
-                   const cleanDescription = event.description?.replace(/END_DATE: (.*)/, '').trim()
+                   const regDeadlineMatch = event.description?.match(/REGISTRATION_DEADLINE: (.*)/)
+                   const regDeadline = regDeadlineMatch ? regDeadlineMatch[1] : null
+                   const cleanDescription = event.description
+                     ?.replace(/REGISTRATION_DEADLINE: [^\n]*/, "")
+                     ?.replace(/EVENT_END_DATE: [^\n]*/, "")
+                     ?.trim() || "";
 
                    return (
                     <EventCard 
@@ -72,13 +77,12 @@ export function EventsClient({ initialEvents }: { initialEvents: any[] }) {
                       title={event.title}
                       description={cleanDescription}
                       location={event.location}
-                      date={event.date}
+                      date={event.rawDate || event.date}
                       endDate={endDate}
+                      regDeadline={regDeadline}
                       type={event.type}
-                      attendees={event.attendees}
-                      prize={event.prize}
-                      featured={event.featured}
                       imageUrl={event.image_url}
+                      organizerName={event.organizerName}
                     />
                   )
                 })}
@@ -127,73 +131,83 @@ export function EventsClient({ initialEvents }: { initialEvents: any[] }) {
   );
 }
 
-function EventCard({ id, title, description, location, date, endDate, type, attendees, prize, featured, imageUrl }: { 
+function EventCard({ id, title, description, location, date, endDate, regDeadline, type, imageUrl, organizerName }: { 
   id: string,
   title: string, 
   description: string, 
   location: string,
   date: string,
   endDate?: string | null,
+  regDeadline?: string | null,
   type: string,
-  attendees: number,
-  prize?: string | null,
-  featured?: boolean,
-  imageUrl?: string | null
+  imageUrl?: string | null,
+  organizerName?: string
 }) {
-  return (
-    <Link href={`/events/${id}`} className="block">
-    <div className={cn(
-        "bg-background p-8 md:p-12 space-y-8 hover:bg-secondary/10 transition-colors group border border-border/40 rounded-sm cursor-pointer",
-        featured && "md:col-span-2 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors"
-    )}>
-      {imageUrl && (
-        <div className="aspect-video w-full overflow-hidden rounded-sm border border-border/10 mb-6">
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        </div>
-      )}
-      <div className="flex items-start justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">
-          {type}
-        </span>
-        {prize && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm">
-                <Trophy className="h-3 w-3" /> Prize: {prize}
-            </div>
-        )}
-      </div>
-      
-      <div className={cn("space-y-4", featured && "max-w-xl mx-auto text-center md:text-left md:mx-0")}>
-        <h3 className={cn("text-xl md:text-2xl lg:text-3xl font-bold tracking-tight group-hover:text-primary transition-colors", featured && "md:text-2xl lg:text-4xl")}>{title}</h3>
-        <p className="text-muted-foreground leading-relaxed text-[14px] md:text-base line-clamp-3">
-          {description}
-        </p>
-      </div>
+  let isRegistrationClosed = false
+  if (regDeadline) {
+    const deadlineDate = new Date(regDeadline)
+    deadlineDate.setHours(23, 59, 59, 999)
+    isRegistrationClosed = new Date() > deadlineDate
+  } else if (date) {
+    const eventDateObj = new Date(date)
+    eventDateObj.setHours(23, 59, 59, 999)
+    isRegistrationClosed = new Date() > eventDateObj
+  }
 
-      <div className="flex flex-wrap gap-x-8 gap-y-4 pt-4 border-t border-border/60">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 font-semibold text-[11px] text-muted-foreground uppercase tracking-widest">
-              <Calendar className="h-4 w-4 text-primary/40" /> Starts: {date}
+  return (
+    <div className="bg-background border border-border/40 rounded-sm overflow-hidden flex flex-col hover:border-primary/20 hover:shadow-sm transition-all group relative">
+      {imageUrl && (
+        <Link href={`/events/${id}`} className="aspect-video w-full overflow-hidden border-b border-border/10 block cursor-pointer">
+          <img src={imageUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        </Link>
+      )}
+      <div className="p-6 space-y-4 flex-1 flex flex-col">
+        <div className="flex justify-between items-start">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">{type || "Community Event"}</span>
+          <div className="flex flex-col items-end gap-1.5">
+            <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+              isRegistrationClosed 
+                ? "bg-red-500/10 text-red-500 border-red-500/20" 
+                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+            }`}>
+              {isRegistrationClosed ? "Closed" : "Open"}
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 bg-secondary rounded-full">
+              {new Date(date).toLocaleDateString()}
+              {endDate && endDate !== date && ` - ${new Date(endDate).toLocaleDateString()}`}
+            </span>
           </div>
-          {endDate && (
-             <div className="flex items-center gap-2 font-semibold text-[9px] text-muted-foreground/60 uppercase tracking-widest ml-6">
-                Ends: {new Date(endDate).toLocaleDateString()}
-             </div>
+        </div>
+        <div className="space-y-2 flex-1">
+          <Link href={`/events/${id}`}>
+            <h4 className="text-lg font-bold tracking-tight hover:text-primary transition-colors line-clamp-1 cursor-pointer">{title}</h4>
+          </Link>
+          
+          {/* Event Date Range */}
+          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1.5">
+            📅 {new Date(date).toLocaleDateString()}
+            {endDate && endDate !== date && ` to ${new Date(endDate).toLocaleDateString()}`}
+          </p>
+
+          {regDeadline && (
+            <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">
+              ⏳ Reg Ends: {new Date(regDeadline).toLocaleDateString()}
+            </p>
           )}
+
+          <p className="text-[13px] text-muted-foreground line-clamp-3 leading-relaxed mt-2">{description}</p>
         </div>
-        <div className="flex items-center gap-2 font-semibold text-[11px] text-muted-foreground uppercase tracking-widest">
-            <MapPin className="h-4 w-4 text-primary/40" /> {location}
+        <div className="pt-4 border-t border-border/20 flex items-center justify-between mt-auto">
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded-full bg-secondary flex items-center justify-center text-[8px] font-black italic">
+              {organizerName?.[0] || 'A'}
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground/60">{organizerName || 'Anonymous'}</span>
+          </div>
+          <span className="text-[10px] font-bold text-muted-foreground/45">{location}</span>
         </div>
-        <div className="flex items-center gap-2 font-semibold text-[11px] text-muted-foreground uppercase tracking-widest ml-auto">
-            <Users className="h-4 w-4 text-primary/40" /> {attendees} Joined
-        </div>
-      </div>
-      
-      <div className="pt-4">
-          <span className="w-full md:w-auto px-8 py-2.5 bg-primary/10 text-primary font-bold hover:bg-primary/20 transition-colors rounded-sm text-[10px] uppercase tracking-widest inline-block">
-              View Event Details →
-          </span>
       </div>
     </div>
-    </Link>
   );
 }
+// Hot-reload trigger comment

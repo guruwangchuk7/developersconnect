@@ -248,20 +248,29 @@ export function useDashboardData() {
    const handlePost = async (guidedFields: any, setGuidedFields: (fields: any) => void) => {
       if (!user) return
 
-      const emptyFields = { blocker: "", stack: "", context: "", role: "", project: "", mission: "", projectName: "", description: "", link: "", eventTitle: "", eventVenue: "", eventDate: "", eventEndDate: "", eventDescription: "", eventPoster: "", updateImage: "" }
+      const emptyFields = { blocker: "", stack: "", context: "", role: "", project: "", mission: "", projectName: "", description: "", link: "", eventTitle: "", eventVenue: "", eventDate: "", eventEndDate: "", eventDescription: "", eventPoster: "", updateImage: "", registrationDeadline: "", eventStartTime: "", eventEndTime: "" }
 
       if (activeTab === "organize-event") {
          if (!guidedFields.eventTitle?.trim()) return toast.error("Event title required")
          if (!guidedFields.eventVenue?.trim()) return toast.error("Event venue required")
+         if (!guidedFields.eventDate?.trim()) return toast.error("Event date required")
 
          setIsPosting(true)
+         let finalDescription = (guidedFields.eventDescription || "").trim();
+         if (guidedFields.registrationDeadline) {
+            finalDescription += `\nREGISTRATION_DEADLINE: ${guidedFields.registrationDeadline}`;
+         }
+         if (guidedFields.eventEndDate) {
+            finalDescription += `\nEVENT_END_DATE: ${guidedFields.eventEndDate}`;
+         }
+
          try {
             const { error } = await supabase.from('events').insert([{
                organizer_id: user.id,
                title: guidedFields.eventTitle.trim(),
                venue: guidedFields.eventVenue.trim(),
                event_date: guidedFields.eventDate || new Date().toISOString(),
-               description: guidedFields.eventDescription?.trim() + (guidedFields.eventEndDate ? `\nEND_DATE: ${guidedFields.eventEndDate}` : ""),
+               description: finalDescription,
                image_url: guidedFields.eventPoster?.trim() || null
             }])
             if (!error) {

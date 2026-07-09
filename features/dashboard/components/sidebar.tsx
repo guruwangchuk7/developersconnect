@@ -17,7 +17,8 @@ import {
   Activity,
   UserCheck,
   FileText,
-  Share2
+  Share2,
+  Sparkles
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -58,6 +59,7 @@ export function Sidebar({ activeTab, setActiveTab, setIsMessagesOpen, className 
       title: "Workspace",
       items: [
         { id: "messages", label: "Messages", icon: MessageSquare },
+        { id: "ai-tools", label: "AI Tools", icon: Sparkles },
         { id: "help-guide", label: "Help", icon: HelpCircle },
         { id: "settings", label: "Settings", icon: Settings, href: "/identity" },
       ]
