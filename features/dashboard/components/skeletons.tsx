@@ -4,11 +4,16 @@ import { cn } from "@/lib/utils"
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-muted/60", className)}
+      className={cn(
+        "animate-pulse rounded-md bg-muted/50 relative overflow-hidden",
+        "before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
+        className
+      )}
       {...props}
     />
   )
 }
+
 
 export function FeedSkeleton({ isGrid = false }: { isGrid?: boolean }) {
   return (

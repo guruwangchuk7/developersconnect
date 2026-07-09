@@ -152,3 +152,16 @@ h6 {
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
   }
 }
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}

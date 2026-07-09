@@ -19,6 +19,7 @@ import { Sidebar } from "@/features/dashboard/components/sidebar"
 import { Help } from "@/features/dashboard/components/help"
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header"
 import { EventGrid } from "@/features/dashboard/components/event-grid"
+import { MatchmakerView } from "@/features/dashboard/components/matchmaker-view"
 import { FeedSkeleton, SidebarSkeleton, HeaderSkeleton } from "@/features/dashboard/components/skeletons"
 
 function DashboardContent() {
@@ -65,6 +66,8 @@ function DashboardContent() {
       switch (activeTab) {
          case "discover":
             return { title: "Discover Developers", subtitle: "Connect with technical experts across Bhutan" }
+         case "ai-tools":
+            return { title: <>AI <span className="text-primary">Tools</span></>, subtitle: "Access AI-powered features to build and connect faster" }
          case "teams":
          case "dev-needed":
             return { title: "Project Teams", subtitle: "Find the right partners for your next build" }
@@ -153,6 +156,12 @@ function DashboardContent() {
                            handleCancelConnection={handleCancelConnection}
                            getConnectionStatus={getConnectionStatus}
                         />
+                     ) : activeTab === "ai-tools" ? (
+                        <MatchmakerView 
+                           user={user}
+                           handleConnect={handleConnect}
+                           getConnectionStatus={getConnectionStatus}
+                        />
                      ) : activeTab === "teams" || activeTab === "projects" ? (
                         <ContentFeed
                            isGrid={true}
@@ -229,7 +238,7 @@ function DashboardContent() {
 
 export default function DashboardPage() {
    return (
-      <Suspense fallback={null}>
+      <Suspense fallback={<HeaderSkeleton />}>
          <DashboardContent />
       </Suspense>
    )

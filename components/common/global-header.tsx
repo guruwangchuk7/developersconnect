@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
-import { Menu, X, LayoutGrid, Search, Users, Trophy, MessageSquare, LogOut, Settings, HelpCircle, History, ArrowLeft } from "lucide-react";
+import { Menu, X, LayoutGrid, Search, Users, Trophy, MessageSquare, LogOut, Settings, HelpCircle, History, ArrowLeft, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { usePathname } from "next/navigation";
 import { Session } from "@supabase/supabase-js";
@@ -85,7 +85,7 @@ export function GlobalHeader({ children }: GlobalHeaderProps) {
                     Sign in
                   </Link>
                   <Link href="/join" className={cn(buttonVariants({ size: "sm" }), "h-9 rounded-sm px-4 md:px-5 text-[13px] font-semibold bg-primary shadow-sm transition hover:opacity-90")}>
-                    Join Network
+                    Join Connect
                   </Link>
                 </div>
               )}
@@ -302,6 +302,9 @@ export function GlobalHeader({ children }: GlobalHeaderProps) {
                   <Link href="/dashboard?tab=messages" className="flex items-center gap-4 text-[13px] font-bold py-1 px-1 hover:text-primary transition-colors" onClick={() => setIsOpen(false)}>
                     <MessageSquare className="h-4.5 w-4.5 text-muted-foreground/40" /> Messages
                   </Link>
+                  <Link href="/dashboard?tab=ai-tools" className="flex items-center gap-4 text-[13px] font-bold py-1 px-1 hover:text-primary transition-colors" onClick={() => setIsOpen(false)}>
+                    <Sparkles className="h-4.5 w-4.5 text-muted-foreground/40" /> AI Tools
+                  </Link>
                   <Link href="/dashboard?tab=help-guide" className="flex items-center gap-4 text-[13px] font-bold py-1 px-1 hover:text-primary transition-colors" onClick={() => setIsOpen(false)}>
                     <HelpCircle className="h-4.5 w-4.5 text-muted-foreground/40" /> Help Guide
                   </Link>
@@ -341,7 +344,7 @@ export function GlobalHeader({ children }: GlobalHeaderProps) {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <Link href="/join" className={cn(buttonVariants({ size: "lg" }), "w-full justify-center bg-primary rounded-none h-12 font-bold")} onClick={() => setIsOpen(false)}>Join Network</Link>
+                <Link href="/join" className={cn(buttonVariants({ size: "lg" }), "w-full justify-center bg-primary rounded-sm h-12 font-bold")} onClick={() => setIsOpen(false)}>Join Connect</Link>
                 <Link href="/join" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full justify-center rounded-none h-12 font-bold border-border/20")} onClick={() => setIsOpen(false)}>Sign in</Link>
               </div>
             )}

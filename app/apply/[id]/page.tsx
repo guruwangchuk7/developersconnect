@@ -9,6 +9,7 @@ import { ArrowLeft, UploadCloud, FileText, CheckCircle2, ChevronRight, Loader2, 
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { analytics } from "@/lib/analytics"
+import { Skeleton } from "@/features/dashboard/components/skeletons"
 
 export default function ApplicationPage({ params }: { params: any }) {
   const { id } = React.use(params) as { id: string }
@@ -156,9 +157,57 @@ export default function ApplicationPage({ params }: { params: any }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary/40" />
-        <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground">Synchronizing Application Node...</p>
+      <div className="min-h-screen bg-background flex flex-col font-sans">
+        <GlobalHeader />
+        <main className="flex-1 flex flex-col items-center w-full bg-[#fafafa]/50">
+          <div className="w-full max-w-4xl px-4 md:px-8 py-12 md:py-24 space-y-12">
+            
+            <Skeleton className="h-4 w-24 opacity-40" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              <div className="lg:col-span-5 space-y-8">
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-32 rounded-full opacity-30" />
+                  <Skeleton className="h-12 w-full opacity-60" />
+                  <Skeleton className="h-4 w-48 opacity-40" />
+                </div>
+
+                <div className="p-6 bg-white border border-border/60 rounded-xl shadow-sm space-y-6">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full opacity-50" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-16 opacity-30" />
+                      <Skeleton className="h-4 w-32 opacity-40" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-20 w-full opacity-20" />
+                </div>
+              </div>
+
+              <div className="lg:col-span-7">
+                <div className="bg-white border border-border/60 rounded-2xl shadow-xl shadow-black/[0.02] overflow-hidden">
+                  <div className="p-8 md:p-10 space-y-10">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-4">
+                        <Skeleton className="h-3 w-40 opacity-30" />
+                        <Skeleton className={cn("w-full bg-[#fafafa] rounded-xl", i === 3 ? "h-14" : "h-28")} />
+                      </div>
+                    ))}
+                    <div className="space-y-4">
+                      <Skeleton className="h-3 w-40 opacity-30" />
+                      <Skeleton className="h-32 w-full rounded-xl border-2 border-dashed border-border/40" />
+                    </div>
+                  </div>
+                  <div className="p-8 md:p-10 bg-[#fafafa] border-t border-border/50 flex justify-between items-center">
+                    <Skeleton className="h-4 w-32 opacity-30" />
+                    <Skeleton className="h-12 w-40 rounded-sm opacity-60" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <GlobalFooter />
       </div>
     )
   }

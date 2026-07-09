@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Plus, Trophy, Trash2 } from "lucide-react"
+import Link from "next/link"
 
 interface EventGridProps {
   events: any[]
@@ -27,10 +28,34 @@ export function EventGrid({ events, onOrganizeEvent, onDeleteEvent, currentUserI
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => {
             const hasPoster = !!event.image_url
-            const endDateMatch = event.description?.match(/END_DATE: (.*)/)
-            const endDate = endDateMatch ? endDateMatch[1] : null
-            const cleanDescription = event.description?.replace(/END_DATE: (.*)/, '').trim()
+            const regDeadlineMatch = event.description?.match(/REGISTRATION_DEADLINE: ([^\n]*)/)
+            const regDeadline = regDeadlineMatch ? regDeadlineMatch[1].trim() : null
+
+            const eventEndDateMatch = event.description?.match(/EVENT_END_DATE: ([^\n]*)/)
+            const eventEndDate = eventEndDateMatch ? eventEndDateMatch[1].trim() : null
+
+            // Clean description by stripping out all metadata matches
+            const cleanDescription = (event.description || "")
+              .replace(/REGISTRATION_DEADLINE: [^\n]*/, "")
+              .replace(/EVENT_END_DATE: [^\n]*/, "")
+              .replace(/EVENT_START_TIME: [^\n]*/, "")
+              .replace(/EVENT_END_TIME: [^\n]*/, "")
+              .replace(/END_DATE: [^\n]*/, "")
+              .trim();
+
             const isOwner = currentUserId === event.organizer_id
+
+            // Check if registration deadline has ended, otherwise check event start date
+            let isRegistrationClosed = false
+            if (regDeadline) {
+              const deadlineDate = new Date(regDeadline)
+              deadlineDate.setHours(23, 59, 59, 999)
+              isRegistrationClosed = new Date() > deadlineDate
+            } else if (event.event_date) {
+              const eventDateObj = new Date(event.event_date)
+              eventDateObj.setHours(23, 59, 59, 999)
+              isRegistrationClosed = new Date() > eventDateObj
+            }
 
             return (
               <div key={event.id} className="bg-background border border-border/40 rounded-sm overflow-hidden flex flex-col hover:border-primary/20 transition-all group relative">
@@ -43,27 +68,45 @@ export function EventGrid({ events, onOrganizeEvent, onDeleteEvent, currentUserI
                   </button>
                 )}
                 {hasPoster && (
-                  <div className="aspect-video w-full overflow-hidden border-b border-border/10">
+                  <Link href={`/events/${event.id}`} className="aspect-video w-full overflow-hidden border-b border-border/10 block cursor-pointer">
                     <img src={event.image_url} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  </div>
+                  </Link>
                 )}
                 <div className="p-6 space-y-4 flex-1 flex flex-col">
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Community Event</span>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+                        isRegistrationClosed 
+                          ? "bg-red-500/10 text-red-500 border-red-500/20" 
+                          : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                      }`}>
+                        {isRegistrationClosed ? "Closed" : "Open"}
+                      </span>
                       <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 bg-secondary rounded-full">
                         {new Date(event.event_date).toLocaleDateString()}
+                        {eventEndDate && eventEndDate !== event.event_date && ` - ${new Date(eventEndDate).toLocaleDateString()}`}
                       </span>
-                      {endDate && (
-                        <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 border border-border/40 rounded-full text-muted-foreground">
-                          Ends: {new Date(endDate).toLocaleDateString()}
-                        </span>
-                      )}
                     </div>
                   </div>
                   <div className="space-y-2 flex-1">
-                    <h4 className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors line-clamp-1">{event.title}</h4>
-                    <p className="text-[13px] text-muted-foreground line-clamp-3 leading-relaxed">{cleanDescription}</p>
+                    <Link href={`/events/${event.id}`}>
+                      <h4 className="text-lg font-bold tracking-tight hover:text-primary transition-colors line-clamp-1 cursor-pointer">{event.title}</h4>
+                    </Link>
+                    
+                    {/* Event Date Range */}
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1.5">
+                      📅 {new Date(event.event_date).toLocaleDateString()}
+                      {eventEndDate && eventEndDate !== event.event_date && ` to ${new Date(eventEndDate).toLocaleDateString()}`}
+                    </p>
+
+                    {regDeadline && (
+                      <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">
+                        ⏳ Reg Ends: {new Date(regDeadline).toLocaleDateString()}
+                      </p>
+                    )}
+
+                    <p className="text-[13px] text-muted-foreground line-clamp-3 leading-relaxed mt-2">{cleanDescription}</p>
                   </div>
                   <div className="pt-4 border-t border-border/20 flex items-center justify-between mt-auto">
                     <div className="flex items-center gap-2">

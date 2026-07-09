@@ -37,7 +37,7 @@ export function GlobalFooter() {
           </div>
         </div>
         <div className="mt-10 md:mt-12 flex flex-col items-center lg:flex-row justify-between gap-6 md:gap-8 text-[11px] md:text-[12px] font-medium text-muted-foreground/60 text-center lg:text-left">
-          <span>© 2026 Bhutan Developer Network. Built on the national grid.</span>
+          <span>© 2026 Bhutan Developer Connect. Built on the national grid.</span>
           <div className="flex flex-wrap justify-center gap-6 md:gap-8">
             <Link href="https://x.com/guru_wangchuk" target="_blank" className="hover:text-foreground transition-colors flex items-center gap-1.5"><Twitter className="h-3 w-3" /> Twitter</Link>
             <Link href="https://github.com/guruwangchuk7" target="_blank" className="hover:text-foreground transition-colors flex items-center gap-1.5"><Github className="h-3 w-3" /> GitHub</Link>

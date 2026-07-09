@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, X, Camera, Tag as TagIcon, MapPin, Calendar, HelpCircle, Rocket, Briefcase } from "lucide-react"
+import { Sparkles, X, Camera, Tag as TagIcon, MapPin, Calendar, HelpCircle, Rocket, Briefcase, Loader2 } from "lucide-react"
 import { Profile } from "@/types"
+import { AIWritingAssistant } from "@/components/common/ai-writing-assistant"
+import { toast } from "sonner"
 
 interface PostCreatorProps {
   activeTab: string
@@ -26,6 +28,61 @@ export function PostCreator({
   const [isUploading, setIsUploading] = React.useState(false)
   const [showTags, setShowTags] = React.useState(false)
   const updateFileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const getTextFieldKey = () => {
+    switch (activeTab) {
+      case 'dev-needed': return 'mission'
+      case 'ask-help': return 'context'
+      case 'share-project': return 'description'
+      case 'organize-event': return 'eventDescription'
+      default: return 'blocker'
+    }
+  }
+
+  const currentFieldKey = getTextFieldKey()
+  const currentTextValue = guidedFields[currentFieldKey] || ""
+
+  const [isScraping, setIsScraping] = React.useState(false)
+  const [referenceUrl, setReferenceUrl] = React.useState("")
+
+  const handleFetchUrlInfo = async () => {
+    if (!referenceUrl.trim() || !referenceUrl.startsWith("http")) {
+      toast.error("Please enter a valid URL starting with http:// or https://")
+      return
+    }
+
+    setIsScraping(true)
+    toast.info("AI is analyzing the website and extracting event details...")
+
+    try {
+      const res = await fetch("/api/fetch-url-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: referenceUrl.trim() })
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        setGuidedFields({
+          ...guidedFields,
+          eventTitle: data.title || guidedFields.eventTitle,
+          eventVenue: data.venue || guidedFields.eventVenue,
+          eventDate: data.startsOn || guidedFields.eventDate,
+          eventEndDate: data.endsOn || guidedFields.eventEndDate,
+          registrationDeadline: data.registrationDeadline || guidedFields.registrationDeadline,
+          eventDescription: data.description || guidedFields.eventDescription
+        })
+        toast.success("Event details successfully auto-filled!")
+      } else {
+        toast.error(data.error || "Failed to extract event info")
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Error communicating with crawler API")
+    } finally {
+      setIsScraping(false)
+    }
+  }
 
   // Identify category types
   const allTabs = ['post-update', 'dev-needed', 'ask-help', 'share-project', 'organize-event']
@@ -118,13 +175,55 @@ export function PostCreator({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                        <div className="space-y-1.5">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 pl-1">Venue</label>
-                         <input type="text" placeholder="Venue" className="w-full bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-[14px] font-medium" value={guidedFields.eventVenue || ""} onChange={e => setGuidedFields({ ...guidedFields, eventVenue: e.target.value })} />
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 pl-1">Venue</label>
+                          <input type="text" placeholder="Venue" className="w-full bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-[14px] font-medium" value={guidedFields.eventVenue || ""} onChange={e => setGuidedFields({ ...guidedFields, eventVenue: e.target.value })} />
                        </div>
                        <div className="space-y-1.5">
-                         <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 pl-1">Date</label>
-                         <input type="date" className="w-full bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-[14px] font-medium color-scheme-dark" value={guidedFields.eventDate || ""} onChange={e => setGuidedFields({ ...guidedFields, eventDate: e.target.value })} />
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 pl-1">Registration Ends On</label>
+                          <input type="date" className="w-full bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-[14px] font-medium color-scheme-dark" value={guidedFields.registrationDeadline || ""} onChange={e => setGuidedFields({ ...guidedFields, registrationDeadline: e.target.value })} />
                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                       <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 pl-1">Event Starts On</label>
+                          <input type="date" className="w-full bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-[14px] font-medium color-scheme-dark" value={guidedFields.eventDate || ""} onChange={e => setGuidedFields({ ...guidedFields, eventDate: e.target.value })} />
+                       </div>
+                       <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 pl-1">Event Ends On</label>
+                          <input type="date" className="w-full bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-[14px] font-medium color-scheme-dark" value={guidedFields.eventEndDate || ""} onChange={e => setGuidedFields({ ...guidedFields, eventEndDate: e.target.value })} />
+                       </div>
+                    </div>
+                    <div className="space-y-1.5 p-3.5 bg-primary/5 border border-primary/20 rounded-sm mt-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-primary pl-1 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" /> Auto-Generate Event details from URL
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Paste event page link (e.g. hackathon site, flyer link)..."
+                          className="flex-1 bg-secondary/20 border-none px-4 py-2 rounded-sm focus:ring-1 focus:ring-primary/20 text-xs font-semibold text-foreground placeholder:text-muted-foreground/35"
+                          value={referenceUrl}
+                          onChange={e => setReferenceUrl(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleFetchUrlInfo}
+                          disabled={isScraping}
+                          className="px-4 py-2 bg-primary text-background text-[10px] font-bold uppercase tracking-widest rounded-sm hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer"
+                        >
+                          {isScraping ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Analyzing...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-3 w-3" />
+                              Auto-Fill
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -205,6 +304,12 @@ export function PostCreator({
           >
             <TagIcon className="h-5 w-5" />
           </button>
+
+          <AIWritingAssistant
+            contentType={activeTab}
+            currentText={currentTextValue}
+            onReplaceText={(newText) => setGuidedFields({ ...guidedFields, [currentFieldKey]: newText })}
+          />
         </div>
 
         <button

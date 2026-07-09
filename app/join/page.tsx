@@ -3,7 +3,7 @@
 import * as React from "react"
 import { createClient } from "@/lib/supabase"
 import { buttonVariants } from "@/components/ui/button-variants"
-import { cn } from "@/lib/utils"
+import { cn, getURL } from "@/lib/utils"
 import Link from "next/link"
 import { Mail } from "lucide-react"
 import { analytics } from "@/lib/analytics"
@@ -19,7 +19,7 @@ export default function JoinPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${getURL()}auth/callback`,
         },
       })
       if (error) throw error

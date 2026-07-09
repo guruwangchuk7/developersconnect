@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     // 2. Security: Verify that the recipient is actually a registered project owner
     // This prevents the endpoint from being used as a general purpose spam relay.
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('email')
